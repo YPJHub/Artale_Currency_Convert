@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artale幣值轉換器</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .converter-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .conversion-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .converter-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .input-group {
+            display: flex;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .input-group label {
+            min-width: 120px;
+            font-size: 16px;
+        }
+        .input-field {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            background-color: #fff8e1; /* 輕微的橘色背景 */
+            transition: border-color 0.3s;
+        }
+        .input-field:focus {
+            border-color: #ff9800;
+            outline: none;
+        }
+        .conversion-rates {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        .rate-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .rate-item {
+            margin-bottom: 5px;
+        }
+        .rate-input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .rate-input-group label {
+            min-width: 150px;
+            font-size: 14px;
+        }
+        .rate-input {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: #fff8e1;
+        }
+        .editable-rate {
+            border-left: 3px solid #ff9800;
+            padding-left: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Artale幣值轉換器</h1>
+    
+    <div class="converter-container">
+        <div class="conversion-card">
+            <div class="converter-title">幣值轉換</div>
+            <div class="input-group">
+                <label for="snow-currency">雪花：</label>
+                <input type="number" id="snow-currency" class="input-field" value="1" min="0" step="0.01">
+            </div>
+            <div class="input-group">
+                <label for="maple-currency">楓幣(萬)：</label>
+                <input type="number" id="maple-currency" class="input-field" value="2.7" min="0" step="0.01">
+            </div>
+            <div style="height: 20px;"></div> <!-- 空一行的間距 -->
+            <div class="input-group">
+                <label for="twd-currency">台幣：</label>
+                <input type="number" id="twd-currency" class="input-field" value="4.09" min="0" step="0.01">
+            </div>
+        </div>
+
+        <div class="conversion-card">
+            <div class="converter-title">匯率設定</div>
+            <div class="rate-input-group editable-rate">
+                <label for="snow-to-maple">雪花 : 楓幣(萬) =</label>
+                <input type="number" id="snow-to-maple" class="rate-input" value="2.7" step="0.01">
+                <span style="color: #d32f2f; font-weight: bold;">（每日變動，可修改）</span>
+            </div>
+            <div class="rate-input-group">
+                <label for="twd-to-w">台幣 : W幣 =</label>
+                <input type="number" id="twd-to-w" class="rate-input" value="6.67" step="0.01" disabled>
+                <span>（固定）</span>
+            </div>
+            <div class="rate-input-group">
+                <label for="snow-to-w">雪花 : W幣 =</label>
+                <input type="number" id="snow-to-w" class="rate-input" value="27.27" step="0.01" disabled>
+            </div>
+            <div class="rate-input-group">
+                <label for="w-to-maple">W幣 : 楓幣(萬) =</label>
+                <input type="number" id="w-to-maple" class="rate-input" value="0.099" step="0.001" disabled>
+            </div>
+            <div class="rate-input-group">
+                <label for="twd-to-maple">台幣 : 楓幣(萬) =</label>
+                <input type="number" id="twd-to-maple" class="rate-input" value="0.66" step="0.01" disabled>
+            </div>
+            <div class="rate-input-group">
+                <label for="snow-to-twd">雪花 : 台幣 =</label>
+                <input type="number" id="snow-to-twd" class="rate-input" value="4.09" step="0.01" disabled>
+            </div>
+        </div>
+
+        <div class="conversion-rates">
+            <div class="rate-title">說明：</div>
+            <div class="rate-item">1. 橘色輸入框支持雙向轉換</div>
+            <div class="rate-item">2. 輸入任一幣值，其他幣值會自動計算</div>
+            <div class="rate-item">3. 雪花 : 楓幣(萬)匯率可以修改，其他匯率根據比例自動計算</div>
+            <div class="rate-item">4. 修改匯率後，轉換會使用最新設定的匯率</div>
+        </div>
+    </div>
+
+    <script>
+        // 獲取元素 - 幣值輸入
+        const mapleCurrency = document.getElementById('maple-currency');
+        const twdCurrency = document.getElementById('twd-currency');
+        const snowCurrency = document.getElementById('snow-currency');
+        
+        // 獲取元素 - 匯率設定
+        const twdToW = document.getElementById('twd-to-w');
+        const snowToW = document.getElementById('snow-to-w');
+        const snowToMaple = document.getElementById('snow-to-maple');
+        const wToMaple = document.getElementById('w-to-maple');
+        const twdToMaple = document.getElementById('twd-to-maple');
+        const snowToTwd = document.getElementById('snow-to-twd');
+
+        // 設定初始匯率
+        let RATES = {
+            TWD_TO_W: 6.67,        // 台幣 : W幣
+            SNOW_TO_W: 27.27,      // 雪花 : W幣
+            W_TO_MAPLE: 0.099,     // W幣 : 楓幣(萬)
+            SNOW_TO_MAPLE: 2.7,    // 雪花 : 楓幣(萬) (可修改)
+            TWD_TO_MAPLE: 0.66,    // 台幣 : 楓幣(萬)
+            SNOW_TO_TWD: 4.09      // 雪花 : 台幣
+        };
+
+        // 更新所有匯率顯示
+        function updateRateDisplay() {
+            twdToW.value = RATES.TWD_TO_W.toFixed(2);
+            snowToW.value = RATES.SNOW_TO_W.toFixed(2);
+            snowToMaple.value = RATES.SNOW_TO_MAPLE.toFixed(2);
+            wToMaple.value = RATES.W_TO_MAPLE.toFixed(3);
+            twdToMaple.value = RATES.TWD_TO_MAPLE.toFixed(2);
+            snowToTwd.value = RATES.SNOW_TO_TWD.toFixed(2);
+        }
+
+        // 更新所有貨幣顯示 (基於楓幣值)
+        function updateCurrencyFromMaple() {
+            if (mapleCurrency.value) {
+                const mapleValue = parseFloat(mapleCurrency.value);
+                const twdValue = mapleValue / RATES.TWD_TO_MAPLE;
+                const snowValue = mapleValue / RATES.SNOW_TO_MAPLE;
+                
+                twdCurrency.value = twdValue.toFixed(2);
+                snowCurrency.value = snowValue.toFixed(2);
+            }
+        }
+
+        // 更新所有貨幣顯示 (基於台幣值)
+        function updateCurrencyFromTwd() {
+            if (twdCurrency.value) {
+                const twdValue = parseFloat(twdCurrency.value);
+                const mapleValue = twdValue * RATES.TWD_TO_MAPLE;
+                const snowValue = twdValue / RATES.SNOW_TO_TWD;
+                
+                mapleCurrency.value = mapleValue.toFixed(2);
+                snowCurrency.value = snowValue.toFixed(2);
+            }
+        }
+
+        // 更新所有貨幣顯示 (基於雪花值)
+        function updateCurrencyFromSnow() {
+            if (snowCurrency.value) {
+                const snowValue = parseFloat(snowCurrency.value);
+                const twdValue = snowValue * RATES.SNOW_TO_TWD;
+                const mapleValue = snowValue * RATES.SNOW_TO_MAPLE;
+                
+                twdCurrency.value = twdValue.toFixed(2);
+                mapleCurrency.value = mapleValue.toFixed(2);
+            }
+        }
+
+        // 楓幣輸入事件
+        mapleCurrency.addEventListener('input', updateCurrencyFromMaple);
+
+        // 台幣輸入事件
+        twdCurrency.addEventListener('input', updateCurrencyFromTwd);
+
+        // 雪花輸入事件
+        snowCurrency.addEventListener('input', updateCurrencyFromSnow);
+
+        // 雪花:楓幣匯率修改事件
+        snowToMaple.addEventListener('input', function() {
+            if (this.value && parseFloat(this.value) > 0) {
+                RATES.SNOW_TO_MAPLE = parseFloat(this.value);
+                // 更新相關聯匯率
+                RATES.SNOW_TO_TWD = RATES.SNOW_TO_MAPLE / RATES.TWD_TO_MAPLE;
+                // 更新顯示
+                updateRateDisplay();
+                // 基於當前雪花值更新其他貨幣
+                updateCurrencyFromSnow();
+            }
+        });
+
+        // 初始化
+        updateRateDisplay();
+        // 以雪花為基準初始化其他幣值
+        updateCurrencyFromSnow();
+    </script>
+</body>
+</html>

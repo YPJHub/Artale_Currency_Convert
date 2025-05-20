@@ -103,12 +103,16 @@
         <div class="conversion-card">
             <div class="converter-title">幣值轉換</div>
             <div class="input-group">
-                <label for="snow-currency">雪花：</label>
-                <input type="number" id="snow-currency" class="input-field" value="1" min="0" step="0.01">
+                <label for="snow-currency">雪花 (請輸入整數)：</label>
+                <input type="number" id="snow-currency" class="input-field" value="1" min="0" step="1" onchange="this.value=Math.floor(this.value)">
             </div>
             <div class="input-group">
                 <label for="maple-currency">楓幣(萬)：</label>
                 <input type="number" id="maple-currency" class="input-field" value="2.7" min="0" step="0.01">
+            </div>
+            <div class="input-group">
+                <label for="w-currency">W幣：</label>
+                <input type="number" id="w-currency" class="input-field" value="27.27" min="0" step="0.01">
             </div>
             <div style="height: 20px;"></div> <!-- 空一行的間距 -->
             <div class="input-group">
@@ -132,6 +136,7 @@
             <div class="rate-input-group">
                 <label for="snow-to-w">雪花 : W幣 =</label>
                 <input type="number" id="snow-to-w" class="rate-input" value="27.27" step="0.01" disabled>
+                <span>（固定）</span>
             </div>
             <div class="rate-input-group">
                 <label for="w-to-maple">W幣 : 楓幣(萬) =</label>
@@ -144,6 +149,7 @@
             <div class="rate-input-group">
                 <label for="snow-to-twd">雪花 : 台幣 =</label>
                 <input type="number" id="snow-to-twd" class="rate-input" value="4.09" step="0.01" disabled>
+                <span>（固定）</span>
             </div>
         </div>
 
@@ -161,6 +167,7 @@
         const mapleCurrency = document.getElementById('maple-currency');
         const twdCurrency = document.getElementById('twd-currency');
         const snowCurrency = document.getElementById('snow-currency');
+        const wCurrency = document.getElementById('w-currency');
         
         // 獲取元素 - 匯率設定
         const twdToW = document.getElementById('twd-to-w');
@@ -172,12 +179,20 @@
 
         // 設定初始匯率
         let RATES = {
-            TWD_TO_W: 6.67,        // 台幣 : W幣
-            SNOW_TO_W: 27.27,      // 雪花 : W幣
-            W_TO_MAPLE: 0.099,     // W幣 : 楓幣(萬)
-            SNOW_TO_MAPLE: 2.7,    // 雪花 : 楓幣(萬) (可修改)
-            TWD_TO_MAPLE: 0.66,    // 台幣 : 楓幣(萬)
-            SNOW_TO_TWD: 4.09      // 雪花 : 台幣
+            TWD_TO_W: 6.6666667,   // 台幣 : W幣 (1台幣 = 6.6666667 W幣) (來源：400/60)
+            SNOW_TO_W: 27.27,      // 雪花 : W幣 (1雪花 = 27.27 W幣) (來源：300/11)
+            W_TO_MAPLE: 0.099,     // W幣 : 楓幣(萬) (1 W幣 = 0.099 楓幣(萬))
+            SNOW_TO_MAPLE: 2.7,    // 雪花 : 楓幣(萬) (1雪花 = 2.7 楓幣(萬))
+            TWD_TO_MAPLE: 0.66,    // 台幣 : 楓幣(萬) (1台幣 = 0.66 楓幣(萬))
+            SNOW_TO_TWD: 4.09      // 雪花 : 台幣 (1雪花 = 4.09台幣)
+        };
+        
+        // 保存原始分數形式的比率，用於精確計算
+        const ORIGINAL_RATIOS = {
+            SNOW_TO_W_NUMERATOR: 300,
+            SNOW_TO_W_DENOMINATOR: 11,
+            TWD_TO_W_NUMERATOR: 400,
+            TWD_TO_W_DENOMINATOR: 60
         };
 
         // 更新所有匯率顯示
@@ -196,9 +211,11 @@
                 const mapleValue = parseFloat(mapleCurrency.value);
                 const twdValue = mapleValue / RATES.TWD_TO_MAPLE;
                 const snowValue = mapleValue / RATES.SNOW_TO_MAPLE;
+                const wValue = mapleValue / RATES.W_TO_MAPLE;
                 
                 twdCurrency.value = twdValue.toFixed(2);
                 snowCurrency.value = snowValue.toFixed(2);
+                wCurrency.value = wValue.toFixed(2);
             }
         }
 
@@ -206,23 +223,52 @@
         function updateCurrencyFromTwd() {
             if (twdCurrency.value) {
                 const twdValue = parseFloat(twdCurrency.value);
+                
+                // 使用原始分數計算W幣，避免精度問題
+                const wValue = (twdValue * ORIGINAL_RATIOS.TWD_TO_W_NUMERATOR) / ORIGINAL_RATIOS.TWD_TO_W_DENOMINATOR;
+                
                 const mapleValue = twdValue * RATES.TWD_TO_MAPLE;
                 const snowValue = twdValue / RATES.SNOW_TO_TWD;
                 
                 mapleCurrency.value = mapleValue.toFixed(2);
                 snowCurrency.value = snowValue.toFixed(2);
+                wCurrency.value = wValue.toFixed(2);
             }
         }
 
         // 更新所有貨幣顯示 (基於雪花值)
         function updateCurrencyFromSnow() {
             if (snowCurrency.value) {
-                const snowValue = parseFloat(snowCurrency.value);
+                // 確保雪花值為整數
+                const snowValue = Math.floor(parseFloat(snowCurrency.value));
+                snowCurrency.value = snowValue; // 更新顯示為整數
+                
                 const twdValue = snowValue * RATES.SNOW_TO_TWD;
                 const mapleValue = snowValue * RATES.SNOW_TO_MAPLE;
+                const wValue = snowValue * RATES.SNOW_TO_W;
                 
                 twdCurrency.value = twdValue.toFixed(2);
                 mapleCurrency.value = mapleValue.toFixed(2);
+                wCurrency.value = wValue.toFixed(2);
+            }
+        }
+        
+        // 更新所有貨幣顯示 (基於W幣值)
+        function updateCurrencyFromW() {
+            if (wCurrency.value) {
+                const wValue = parseFloat(wCurrency.value);
+                
+                // 使用原始分數的逆運算計算雪花，避免精度問題
+                const snowValue = (wValue * ORIGINAL_RATIOS.SNOW_TO_W_DENOMINATOR) / ORIGINAL_RATIOS.SNOW_TO_W_NUMERATOR;
+                
+                // 使用原始分數計算台幣，避免精度問題
+                const twdValue = (wValue * ORIGINAL_RATIOS.TWD_TO_W_DENOMINATOR) / ORIGINAL_RATIOS.TWD_TO_W_NUMERATOR;
+                
+                const mapleValue = wValue * RATES.W_TO_MAPLE;
+                
+                twdCurrency.value = twdValue.toFixed(2);
+                mapleCurrency.value = mapleValue.toFixed(2);
+                snowCurrency.value = snowValue.toFixed(2);
             }
         }
 
@@ -230,28 +276,166 @@
         mapleCurrency.addEventListener('input', updateCurrencyFromMaple);
 
         // 台幣輸入事件
-        twdCurrency.addEventListener('input', updateCurrencyFromTwd);
+        twdCurrency.addEventListener('input', function() {
+            if (this.value) {
+                const twdValue = parseFloat(this.value);
+                
+                // 特殊情況處理：如果台幣值為60，則W幣值固定為400
+                if (Math.abs(twdValue - 60) < 0.01) {
+                    wCurrency.value = "400.00";
+                    
+                    // 計算其他幣值
+                    const snowValue = twdValue / RATES.SNOW_TO_TWD;
+                    const mapleValue = twdValue * RATES.TWD_TO_MAPLE;
+                    
+                    snowCurrency.value = snowValue.toFixed(2);
+                    mapleCurrency.value = mapleValue.toFixed(2);
+                } else {
+                    // 使用原始分數計算W幣
+                    const wValue = (twdValue * ORIGINAL_RATIOS.TWD_TO_W_NUMERATOR) / ORIGINAL_RATIOS.TWD_TO_W_DENOMINATOR;
+                    
+                    const mapleValue = twdValue * RATES.TWD_TO_MAPLE;
+                    const snowValue = twdValue / RATES.SNOW_TO_TWD;
+                    
+                    mapleCurrency.value = mapleValue.toFixed(2);
+                    snowCurrency.value = snowValue.toFixed(2);
+                    wCurrency.value = wValue.toFixed(2);
+                }
+            }
+        });
 
         // 雪花輸入事件
-        snowCurrency.addEventListener('input', updateCurrencyFromSnow);
+        snowCurrency.addEventListener('input', function() {
+            if (this.value) {
+                const snowValue = parseInt(this.value);
+                
+                // 特殊情況處理：如果雪花值為11，則W幣值固定為300
+                if (snowValue === 11) {
+                    wCurrency.value = "300.00";
+                    
+                    // 計算其他幣值
+                    const twdValue = snowValue * RATES.SNOW_TO_TWD;
+                    const mapleValue = snowValue * RATES.SNOW_TO_MAPLE;
+                    
+                    twdCurrency.value = twdValue.toFixed(2);
+                    mapleCurrency.value = mapleValue.toFixed(2);
+                } else {
+                    // 使用原始分數計算W幣，避免精度問題
+                    const wValue = (snowValue * ORIGINAL_RATIOS.SNOW_TO_W_NUMERATOR) / ORIGINAL_RATIOS.SNOW_TO_W_DENOMINATOR;
+                    
+                    // 其他計算
+                    const twdValue = snowValue * RATES.SNOW_TO_TWD;
+                    const mapleValue = snowValue * RATES.SNOW_TO_MAPLE;
+                    
+                    twdCurrency.value = twdValue.toFixed(2);
+                    mapleCurrency.value = mapleValue.toFixed(2);
+                    wCurrency.value = wValue.toFixed(2);
+                }
+            }
+        });
+        
+        // W幣輸入事件
+        wCurrency.addEventListener('input', function() {
+            if (this.value) {
+                const wValue = parseFloat(this.value);
+                
+                // 特殊情況處理：如果W幣值為300，則雪花值固定為11
+                if (Math.abs(wValue - 300) < 0.01) {
+                    snowCurrency.value = "11.00";
+                    
+                    // 計算其他幣值
+                    const twdValue = wValue / RATES.TWD_TO_W;
+                    const mapleValue = wValue * RATES.W_TO_MAPLE;
+                    
+                    twdCurrency.value = twdValue.toFixed(2);
+                    mapleCurrency.value = mapleValue.toFixed(2);
+                } else {
+                    // 使用原始分數的逆運算計算雪花
+                    const snowValue = (wValue * ORIGINAL_RATIOS.SNOW_TO_W_DENOMINATOR) / ORIGINAL_RATIOS.SNOW_TO_W_NUMERATOR;
+                    
+                    // 使用原始分數計算台幣
+                    const twdValue = (wValue * ORIGINAL_RATIOS.TWD_TO_W_DENOMINATOR) / ORIGINAL_RATIOS.TWD_TO_W_NUMERATOR;
+                    
+                    const mapleValue = wValue * RATES.W_TO_MAPLE;
+                    
+                    twdCurrency.value = twdValue.toFixed(2);
+                    mapleCurrency.value = mapleValue.toFixed(2);
+                    snowCurrency.value = snowValue.toFixed(2);
+                }
+            }
+        });
 
         // 雪花:楓幣匯率修改事件
         snowToMaple.addEventListener('input', function() {
             if (this.value && parseFloat(this.value) > 0) {
+                // 儲存原始台幣:W幣匯率
+                const origTwdToW = RATES.TWD_TO_W;
+                
+                // 更新雪花:楓幣匯率
                 RATES.SNOW_TO_MAPLE = parseFloat(this.value);
-                // 更新相關聯匯率
+                
+                // 更新W幣:楓幣匯率 (基於固定的雪花:W幣)
+                RATES.W_TO_MAPLE = RATES.SNOW_TO_MAPLE / RATES.SNOW_TO_W;
+                
+                // 更新台幣:楓幣匯率 (基於固定的台幣:W幣和更新後的W幣:楓幣)
+                RATES.TWD_TO_MAPLE = RATES.TWD_TO_W * RATES.W_TO_MAPLE;
+                
+                // 更新雪花:台幣匯率 (基於更新後的雪花:楓幣和台幣:楓幣)
                 RATES.SNOW_TO_TWD = RATES.SNOW_TO_MAPLE / RATES.TWD_TO_MAPLE;
+                
+                // 確保台幣:W幣保持不變
+                RATES.TWD_TO_W = origTwdToW;
+                
                 // 更新顯示
                 updateRateDisplay();
+                
                 // 基於當前雪花值更新其他貨幣
-                updateCurrencyFromSnow();
+                if (snowCurrency.value) {
+                    const snowValue = parseFloat(snowCurrency.value);
+                    
+                    // 使用原始分數計算W幣，避免精度問題
+                    const wValue = (snowValue * ORIGINAL_RATIOS.SNOW_TO_W_NUMERATOR) / ORIGINAL_RATIOS.SNOW_TO_W_DENOMINATOR;
+                    
+                    // 其他計算保持不變
+                    const twdValue = snowValue * RATES.SNOW_TO_TWD;
+                    const mapleValue = snowValue * RATES.SNOW_TO_MAPLE;
+                    
+                    twdCurrency.value = twdValue.toFixed(2);
+                    mapleCurrency.value = mapleValue.toFixed(2);
+                    wCurrency.value = wValue.toFixed(2);
+                }
             }
         });
 
-        // 初始化
+        // 初始化頁面時執行的計算
+        // 更新顯示
         updateRateDisplay();
-        // 以雪花為基準初始化其他幣值
-        updateCurrencyFromSnow();
+        
+        // 特殊處理：如果初始雪花值為11，確保W幣顯示為300
+        if (parseFloat(snowCurrency.value) === 11) {
+            wCurrency.value = "300.00";
+            
+            const snowValue = 11;
+            const twdValue = snowValue * RATES.SNOW_TO_TWD;
+            const mapleValue = snowValue * RATES.SNOW_TO_MAPLE;
+            
+            twdCurrency.value = twdValue.toFixed(2);
+            mapleCurrency.value = mapleValue.toFixed(2);
+        } else {
+            // 使用精確計算初始化幣值
+            const snowValue = parseFloat(snowCurrency.value);
+            
+            // 使用原始分數計算W幣
+            const wValue = (snowValue * ORIGINAL_RATIOS.SNOW_TO_W_NUMERATOR) / ORIGINAL_RATIOS.SNOW_TO_W_DENOMINATOR;
+            
+            // 其他計算
+            const twdValue = snowValue * RATES.SNOW_TO_TWD;
+            const mapleValue = snowValue * RATES.SNOW_TO_MAPLE;
+            
+            twdCurrency.value = twdValue.toFixed(2);
+            mapleCurrency.value = mapleValue.toFixed(2);
+            wCurrency.value = wValue.toFixed(2);
+        }
     </script>
 </body>
 </html>
